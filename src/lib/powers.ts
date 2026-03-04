@@ -39,6 +39,7 @@ export const POWERS: Power[] = [
     id: "gravity",
     name: "NoobTrainer",
     emoji: "🧲",
+    description: "Hitbox ampliada por 15s",
     unlocksAt: -1, // unlocked by streak, not points
     multiplier: 1,
   },

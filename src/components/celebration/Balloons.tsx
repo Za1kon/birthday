@@ -192,10 +192,8 @@ function Balloon({ left, size, delay, duration, drift, colorIndex, onPop, onHit,
           background:`radial-gradient(circle at 35% 35%, ${c.highlight} 0%, ${c.color} 60%)`,
           borderRadius:"50% 50% 45% 45%", position:"relative",
           filter:`drop-shadow(0 4px 8px ${c.knot}33)`,
-          // Normal click on whole balloon unless punteria active
           cursor: punteriaActive ? "default" : "pointer",
           pointerEvents: punteriaActive ? "none" : "auto",
-          onClick: !punteriaActive && !gravityActive ? (e: React.MouseEvent) => doPop((e as any).clientX, (e as any).clientY) : undefined,
         }}
           onClick={!punteriaActive && !gravityActive ? (e) => doPop(e.clientX, e.clientY) : undefined}
         >
