@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import { PALETTE } from "@/lib/colors";
 import { warmUpAudio } from "@/lib/audio";
 import { useCounter } from "@/lib/counter";
+import { useStreak } from "@/lib/streak";
+import { POWERS } from "@/lib/powers";
 import CounterDisplay from "@/components/CounterDisplay";
+import StreakDisplay from "@/components/StreakDisplay";
+import PowerBar from "@/components/PowerBar";
 import Garland from "@/components/Garland";
 import HangingCard from "./HangingCard";
 import SmashCards from "./SmashCards";
@@ -29,6 +33,30 @@ function getTimeLeft() {
 export default function Countdown() {
   const [time, setTime] = useState<ReturnType<typeof getTimeLeft>>(null);
   const { count, increment: handleScore } = useCounter();
+  const { current: streak, best: bestStreak, hit, miss } = useStreak();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [multiplier, setMultiplier] = useState(1);
+  const [gravityActive, setGravityActive] = useState(false);
+  const [punteriaActive, setPunteriaActive] = useState(false);
+
+  const handleActivate = (id: string) => {
+    const power = POWERS.find(p => p.id === id);
+    if (!power) return;
+    // Puntería and NoobTrainer are mutually exclusive
+    if (id === "punteria" && gravityActive) return;
+    if (id === "gravity" && punteriaActive) return;
+    setActiveId(id);
+    if (id === "gravity") {
+      setGravityActive(true);
+      setTimeout(() => { setGravityActive(false); setActiveId(null); }, 15_000);
+    } else if (id === "punteria") {
+      setPunteriaActive(true);
+      setTimeout(() => { setPunteriaActive(false); setActiveId(null); }, 15_000);
+    } else {
+      setMultiplier(power.multiplier);
+      setTimeout(() => { setMultiplier(1); setActiveId(null); }, 15_000);
+    }
+  };
 
   useEffect(() => {
     document.title = "Faltan...";
@@ -79,9 +107,12 @@ export default function Countdown() {
       `}</style>
 
       <CounterDisplay value={count} />
-      <Garland zIndex={200} top={0} />
-      <Garland zIndex={200} top={44} />
-      <SmashCards onScore={handleScore} />
+      <StreakDisplay current={streak} best={bestStreak} />
+      <PowerBar count={count} bestStreak={bestStreak} onActivate={handleActivate} activeId={activeId}
+        blockedId={gravityActive ? "punteria" : punteriaActive ? "gravity" : null} />
+      <Garland zIndex={50} top={0} />
+      <Garland zIndex={50} top={44} />
+      <SmashCards onScore={handleScore} onHit={hit} onMiss={miss} multiplier={multiplier} gravityActive={gravityActive} punteriaActive={punteriaActive} />
 
       <div className="countdown-root">
         <div className="title-drop" style={{

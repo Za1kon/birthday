@@ -100,8 +100,9 @@ function BalloonPop({ x, y, color, onDone }: { x: number; y: number; color: stri
   );
 }
 
-function Balloon({ left, size, delay, duration, drift, colorIndex, onPop }: {
-  left: string; size: number; delay: number; duration: number; drift: number; colorIndex: number; onPop?: () => void;
+function Balloon({ left, size, delay, duration, drift, colorIndex, onPop, onHit, onMiss, gravityActive, punteriaActive }: {
+  left: string; size: number; delay: number; duration: number; drift: number; colorIndex: number;
+  onPop?: (amount?: number) => void; onHit?: () => void; onMiss?: () => void; gravityActive?: boolean; punteriaActive?: boolean;
 }) {
   const c = BALLOON_COLORS[colorIndex % BALLOON_COLORS.length];
   const stringLen = size * 1.4;
@@ -110,14 +111,25 @@ function Balloon({ left, size, delay, duration, drift, colorIndex, onPop }: {
   const balloonRef = useRef<HTMLDivElement>(null);
   const poppedRef  = useRef(false);
 
-  const doPop = (x: number, y: number) => {
+  const doPop = (x: number, y: number, fromPunteria = false) => {
     if (poppedRef.current) return;
     poppedRef.current = true;
     playPopSound();
-    onPop?.();
+    onPop?.(fromPunteria ? 5 : 1);
+    onHit?.();
     setPopPos({ x, y });
     setTimeout(() => { poppedRef.current = false; }, 1700);
   };
+
+  // Detect when balloon completes its rise without being popped = miss
+  useEffect(() => {
+    const el = balloonRef.current; if (!el) return;
+    const onEnd = (e: AnimationEvent) => {
+      if (e.animationName === "balloonRise" && !poppedRef.current) onMiss?.();
+    };
+    el.addEventListener("animationiteration", onEnd);
+    return () => el.removeEventListener("animationiteration", onEnd);
+  }, [onMiss]);
 
   useEffect(() => {
     const el = balloonRef.current; if (!el) return;
@@ -157,6 +169,7 @@ function Balloon({ left, size, delay, duration, drift, colorIndex, onPop }: {
     );
   }
 
+  const EXPAND = 48;
   return (
     <div ref={balloonRef} style={{
       position:"fixed", left, bottom:"-200px",
@@ -164,20 +177,48 @@ function Balloon({ left, size, delay, duration, drift, colorIndex, onPop }: {
       animation:`balloonRise ${duration}s ${delay}s ease-in-out infinite`,
       zIndex:30, contain:"layout style", touchAction:"none",
     }}>
-      <div onClick={(e) => doPop(e.clientX, e.clientY)} style={{
-        width:size, height:size*1.15,
-        background:`radial-gradient(circle at 35% 35%, ${c.highlight} 0%, ${c.color} 60%)`,
-        borderRadius:"50% 50% 45% 45%", position:"relative",
-        filter:`drop-shadow(0 4px 8px ${c.knot}33)`,
-        cursor:"pointer",
-      }}>
-        <div style={{ position:"absolute", top:"15%", left:"22%", width:"22%", height:"28%",
-          background:"rgba(255,255,255,0.45)", borderRadius:"50%", transform:"rotate(-30deg)" }}/>
-        <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)",
-          width:8, height:8, background:c.knot, borderRadius:"50% 50% 40% 40%" }}/>
-        <div style={{ position:"absolute", bottom:-14, left:"50%", transform:"translateX(-50%)",
-          width:0, height:0, borderLeft:"5px solid transparent",
-          borderRight:"5px solid transparent", borderTop:`8px solid ${c.knot}` }}/>
+      {/* Transparent expanded hitbox wrapper — NoobTrainer only */}
+      <div
+        onClick={gravityActive && !punteriaActive ? (e) => doPop(e.clientX, e.clientY) : undefined}
+        style={{
+          padding: gravityActive && !punteriaActive ? EXPAND : 0,
+          margin: gravityActive && !punteriaActive ? -EXPAND : 0,
+          background: "transparent",
+          pointerEvents: gravityActive && !punteriaActive ? "auto" : "none",
+        }}
+      >
+        <div style={{
+          width:size, height:size*1.15,
+          background:`radial-gradient(circle at 35% 35%, ${c.highlight} 0%, ${c.color} 60%)`,
+          borderRadius:"50% 50% 45% 45%", position:"relative",
+          filter:`drop-shadow(0 4px 8px ${c.knot}33)`,
+          // Normal click on whole balloon unless punteria active
+          cursor: punteriaActive ? "default" : "pointer",
+          pointerEvents: punteriaActive ? "none" : "auto",
+          onClick: !punteriaActive && !gravityActive ? (e: React.MouseEvent) => doPop((e as any).clientX, (e as any).clientY) : undefined,
+        }}
+          onClick={!punteriaActive && !gravityActive ? (e) => doPop(e.clientX, e.clientY) : undefined}
+        >
+          {/* Highlight dot — puntería target */}
+          <div
+            onClick={punteriaActive ? (e) => { e.stopPropagation(); doPop(e.clientX, e.clientY, true); } : undefined}
+            style={{
+              position:"absolute", top:"15%", left:"22%", width:"22%", height:"28%",
+              background: punteriaActive ? c.knot : "rgba(255,255,255,0.45)",
+              borderRadius:"50%", transform:"rotate(-30deg)",
+              cursor: punteriaActive ? "crosshair" : "default",
+              pointerEvents: punteriaActive ? "auto" : "none",
+              outline: punteriaActive ? `2px dashed #fff` : "none",
+              outlineOffset: 3,
+              boxShadow: punteriaActive ? `0 0 8px ${c.knot}` : "none",
+            }}
+          />
+          <div style={{ position:"absolute", bottom:-6, left:"50%", transform:"translateX(-50%)",
+            width:8, height:8, background:c.knot, borderRadius:"50% 50% 40% 40%", pointerEvents:"none" }}/>
+          <div style={{ position:"absolute", bottom:-14, left:"50%", transform:"translateX(-50%)",
+            width:0, height:0, borderLeft:"5px solid transparent",
+            borderRight:"5px solid transparent", borderTop:`8px solid ${c.knot}`, pointerEvents:"none" }}/>
+        </div>
       </div>
       <svg width={svgW} height={stringLen} style={{ overflow:"visible", marginTop:14, pointerEvents:"none" }}
         viewBox={`0 0 ${svgW} ${stringLen}`}>
@@ -188,17 +229,22 @@ function Balloon({ left, size, delay, duration, drift, colorIndex, onPop }: {
   );
 }
 
-export default function Balloons({ onPop }: { onPop?: () => void }) {
+export default function Balloons({ onPop, onMiss, onHit, multiplier = 1, gravityActive = false, punteriaActive = false }: {
+  onPop?: (amount?: number) => void;
+  onMiss?: () => void;
+  onHit?: () => void;
+  multiplier?: number;
+  gravityActive?: boolean;
+  punteriaActive?: boolean;
+}) {
   const isMobile = useIsMobile();
-  const config = isMobile ? BALLOON_CONFIG_MOBILE : BALLOON_CONFIG_DESKTOP;
+  const baseConfig = isMobile ? BALLOON_CONFIG_MOBILE : BALLOON_CONFIG_DESKTOP;
+  const config = Array.from({ length: multiplier }, (_, m) =>
+    baseConfig.map(b => ({ ...b, delay: b.delay + m * 2 }))
+  ).flat();
   return (
     <>
       <style>{`
-        /*
-          balloonRise replaces the old balloonFloat + balloonSway combo.
-          A single animation on the container handles both rise and sway
-          using translateX for the drift — no second child animation needed.
-        */
         @keyframes balloonRise {
           0%   { transform: translateY(0)      translateX(0);   opacity:0 }
           2%   { opacity:1 }
@@ -215,7 +261,10 @@ export default function Balloons({ onPop }: { onPop?: () => void }) {
       `}</style>
       {config.map((b, i) => (
         <Balloon key={i} left={b.left} size={b.size} delay={b.delay}
-          duration={b.duration} drift={b.drift} colorIndex={i} onPop={onPop} />
+          duration={b.duration} drift={b.drift} colorIndex={i}
+          onPop={onPop} onHit={onHit} onMiss={onMiss}
+          gravityActive={gravityActive} punteriaActive={punteriaActive}
+        />
       ))}
     </>
   );

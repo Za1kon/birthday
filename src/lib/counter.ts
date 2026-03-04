@@ -27,7 +27,10 @@ export function useCounter() {
     const channel = supabase
       .channel("counter-changes")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "counter" },
-        (payload: any) => { setCount((payload.new as any).value); }
+        (payload: any) => {
+          const newVal = (payload.new as any).value;
+          setCount(c => (c !== null && c > newVal) ? c : newVal);
+        }
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -38,17 +41,18 @@ export function useCounter() {
     flushingRef.current = true;
     const toFlush = pendingRef.current;
     pendingRef.current = 0;
+    let lastVal = 0;
     for (let i = 0; i < toFlush; i++) {
-      const newVal = await incrementCount();
-      setCount(newVal);
+      lastVal = await incrementCount();
     }
+    setCount(c => (c !== null && c > lastVal) ? c : lastVal);
     flushingRef.current = false;
     if (pendingRef.current > 0) flushPending();
   }, []);
 
-  const increment = useCallback(() => {
-    setCount(c => (c ?? 0) + 1);
-    pendingRef.current++;
+  const increment = useCallback((amount = 1) => {
+    setCount(c => (c ?? 0) + amount);
+    pendingRef.current += amount;
     flushPending();
   }, [flushPending]);
 

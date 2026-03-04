@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { warmUpAudio } from "@/lib/audio";
 import { useCounter } from "@/lib/counter";
+import { useStreak } from "@/lib/streak";
+import { POWERS } from "@/lib/powers";
 import CounterDisplay from "@/components/CounterDisplay";
+import StreakDisplay from "@/components/StreakDisplay";
+import PowerBar from "@/components/PowerBar";
 import Garland from "@/components/Garland";
 import Balloons from "./Balloons";
 import Confetti from "./Confetti";
@@ -11,13 +15,39 @@ import Banners from "./Banners";
 import FallingLetters from "./FallingLetters";
 import MainCard from "./MainCard";
 
+const AVALANCHE_DURATION = 15_000;
+const GRAVITY_DURATION = 15_000;
+
 export default function Celebration() {
   const { count, increment } = useCounter();
+  const { current: streak, best: bestStreak, hit, miss } = useStreak();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [multiplier, setMultiplier] = useState(1);
+  const [gravityActive, setGravityActive] = useState(false);
+  const [punteriaActive, setPunteriaActive] = useState(false);
+
+  const handleActivate = (id: string) => {
+    const power = POWERS.find(p => p.id === id);
+    if (!power) return;
+    if (id === "punteria" && gravityActive) return;
+    if (id === "gravity" && punteriaActive) return;
+    setActiveId(id);
+    if (id === "gravity") {
+      setGravityActive(true);
+      setTimeout(() => { setGravityActive(false); setActiveId(null); }, GRAVITY_DURATION);
+    } else if (id === "punteria") {
+      setPunteriaActive(true);
+      setTimeout(() => { setPunteriaActive(false); setActiveId(null); }, GRAVITY_DURATION);
+    } else {
+      setMultiplier(power.multiplier);
+      setTimeout(() => { setMultiplier(1); setActiveId(null); }, AVALANCHE_DURATION);
+    }
+  };
 
   useEffect(() => {
-    document.title = "¡Feliz Cumple Agostina!";
+    document.title = "¡Feliz Cumple Agostina! 🎉";
     let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
-    if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
+    if (!link) { link = document.createElement("link"); link.rel="icon"; document.head.appendChild(link); }
     link.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎂</text></svg>";
     const unlock = () => { warmUpAudio(); document.removeEventListener("touchstart", unlock); document.removeEventListener("mousedown", unlock); };
     document.addEventListener("touchstart", unlock, { passive: true });
@@ -82,9 +112,12 @@ export default function Celebration() {
       `}</style>
 
       <CounterDisplay value={count} />
+      <StreakDisplay current={streak} best={bestStreak} />
+      <PowerBar count={count} bestStreak={bestStreak} onActivate={handleActivate} activeId={activeId}
+        blockedId={gravityActive ? "punteria" : punteriaActive ? "gravity" : null} />
       <div className="celebration-root">
         <Garland zIndex={30} />
-        <Balloons onPop={increment} />
+        <Balloons onPop={increment} onHit={hit} onMiss={miss} multiplier={multiplier} gravityActive={gravityActive} punteriaActive={punteriaActive} />
         <Confetti />
         <FallingLetters />
         <Banners />
