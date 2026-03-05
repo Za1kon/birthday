@@ -21,11 +21,13 @@ export default function StreakDisplay({ current, best }: { current: number; best
 
   return (
     <div style={{
-      position: "fixed", top: "clamp(44px, 8vw, 72px)", left: "50%",
+      position: "fixed", top: "clamp(44px, 8vw, 72px)",
+      left: "calc((100vw - 90px) / 2)",
       transform: "translateX(-50%)",
       zIndex: 201, pointerEvents: "none",
       textAlign: "center",
       fontFamily: "'Nunito', sans-serif",
+      maxWidth: "calc(100vw - 200px)",
     }}>
       {current > 1 && (
         <div style={{

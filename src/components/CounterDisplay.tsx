@@ -17,7 +17,8 @@ export default function CounterDisplay({ value }: { value: number | null }) {
 
   return (
     <div style={{
-      position: "fixed", top: 16, left: "50%",
+      position: "fixed", top: 16,
+      left: "calc((100vw - 90px) / 2)",
       zIndex: 201, pointerEvents: "none",
       fontFamily: "'Lilita One',cursive",
       fontSize: "clamp(28px,6vw,52px)",
