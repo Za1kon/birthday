@@ -1,5 +1,4 @@
 import { Playfair_Display, DM_Sans } from "next/font/google";
-import TrackVisit from "@/components/TrackVisit";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -21,10 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={`${playfair.variable} ${dmSans.variable}`}>
-        <TrackVisit />
-        {children}
-      </body>
+      <body className={`${playfair.variable} ${dmSans.variable}`}>{children}</body>
     </html>
   );
 }
