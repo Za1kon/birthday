@@ -3,17 +3,11 @@
 // export const COOLDOWN_MS = 1 * 60 * 1000; // 1 minute (default)
 export const COOLDOWN_MS = 30 * 1000; // DEBUG: 30s
 
-// export const COOLDOWN_MS_BY_ID: Record<string, number> = {
-//   punteria:  3 * 60 * 1000, // 3 minutes
-//   viento:    3 * 60 * 1000, // 3 minutes
-//   escudo:    3 * 60 * 1000, // 3 minutes
-//   dorado:    5 * 60 * 1000, // 5 minutes
-// };
 export const COOLDOWN_MS_BY_ID: Record<string, number> = {
-  punteria:  30 * 1000, // DEBUG: 30s
-  viento:    30 * 1000, // DEBUG: 30s
-  escudo:    30 * 1000, // DEBUG: 30s
-  dorado:    30 * 1000, // DEBUG: 30s
+  punteria:  3 * 60 * 1000, // 3 minutes
+  viento:    3 * 60 * 1000, // 3 minutes
+  escudo:    3 * 60 * 1000, // 3 minutes
+  dorado:    5 * 60 * 1000, // 5 minutes
 };
 
 export interface Power {
