@@ -3,17 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { POWERS, COOLDOWN_MS, COOLDOWN_MS_BY_ID, getCooldownEnd, setCooldownEnd, isOnCooldown, isUnlocked } from "@/lib/powers";
 
-const ACHIEVEMENT_MILESTONE = 1000;
-
 // ─── Power toast descriptions ─────────────────────────────────────────────────
 
 const POWER_TOAST_DATA: Record<string, { emoji: string; name: string; desc: string }> = {
-  avalanche: { emoji: "🌊", name: "Avalancha",   desc: "x3 objetivos por 15s" },
-  punteria:  { emoji: "🎯", name: "Puntería",    desc: "hitbox mínima — cada acierto x5 por 15s" },
-  gravity:   { emoji: "🧲", name: "NoobTrainer", desc: "hitbox ampliada por 15s" },
+  avalanche: { emoji: "🌊", name: "Avalancha",      desc: "x3 objetivos por 15s" },
+  punteria:  { emoji: "🎯", name: "Puntería",       desc: "hitbox mínima — cada acierto x5 por 30s" },
+  viento:    { emoji: "💨", name: "Viento",          desc: "targets se mecen x2 por 30s" },
+  escudo:    { emoji: "🛡️", name: "Escudo",          desc: "2 clicks por target por 30s" },
+  dorado:    { emoji: "✨", name: "Toque de Oro",    desc: "¡todo dorado! x5 por 1 minuto" },
+  gravity:   { emoji: "🧲", name: "NoobTrainer",    desc: "hitbox ampliada por 15s" },
 };
 
-// ─── Power toast component (inline) ──────────────────────────────────────────
+// ─── Power toast component ────────────────────────────────────────────────────
 
 function PowerToast({ activeId }: { activeId: string | null }) {
   const [visible, setVisible] = useState(false);
@@ -71,9 +72,7 @@ function PowerToast({ activeId }: { activeId: string | null }) {
   );
 }
 
-// ─── Cooldown fill — pure CSS, no canvas needed ──────────────────────────────
-// A pseudo-element rises from bottom to top over COOLDOWN_MS duration.
-// We inject a unique keyframe per icon so the duration is exact.
+// ─── Cooldown fill ────────────────────────────────────────────────────────────
 
 function CooldownFill({ endTime, size, id }: { endTime: number; size: number; id: string }) {
   const remaining = Math.max(0, endTime - Date.now());
@@ -103,8 +102,6 @@ function CooldownFill({ endTime, size, id }: { endTime: number; size: number; id
     </>
   );
 }
-
-// ─── Countdown text ───────────────────────────────────────────────────────────
 
 function CooldownText({ endTime }: { endTime: number }) {
   const [remaining, setRemaining] = useState(Math.max(0, endTime - Date.now()));
@@ -158,14 +155,12 @@ function PowerIcon({ power, keyLabel, size, count, bestStreak, onActivate, activ
   const [onCD, setOnCD] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // Sync cooldown from localStorage on mount and when activated
   useEffect(() => {
     const end = getCooldownEnd(power.id);
     setCooldownEndState(end);
     setOnCD(end > Date.now());
   }, [power.id, active]);
 
-  // Poll until cooldown expires
   useEffect(() => {
     if (!onCD) return;
     const id = setInterval(() => {
@@ -191,7 +186,7 @@ function PowerIcon({ power, keyLabel, size, count, bestStreak, onActivate, activ
     : locked
     ? (power.unlocksAt < 0
         ? `Se desbloquea con racha de 50`
-        : `Se desbloquea a los ${power.unlocksAt} puntos`)
+        : `Se desbloquea a los ${power.unlocksAt.toLocaleString()} puntos`)
     : onCD ? power.name
     : power.description || power.name;
 
@@ -222,7 +217,6 @@ function PowerIcon({ power, keyLabel, size, count, bestStreak, onActivate, activ
         zIndex: showTooltip ? 600 : "auto",
       }}
     >
-      {/* Key label — desktop only, absolute over emoji */}
       {keyLabel && (
         <div style={{
           position:"absolute", top:4, right:4,
@@ -238,12 +232,10 @@ function PowerIcon({ power, keyLabel, size, count, bestStreak, onActivate, activ
         </div>
       )}
 
-      {/* Emoji */}
       <span style={{ fontSize: locked ? 16 : 20, lineHeight:1, position:"relative", zIndex:2 }}>
         {power.emoji}
       </span>
 
-      {/* Blocked overlay */}
       {blocked && (
         <div style={{
           position:"absolute", inset:0, borderRadius:8,
@@ -254,7 +246,6 @@ function PowerIcon({ power, keyLabel, size, count, bestStreak, onActivate, activ
         </div>
       )}
 
-      {/* Cooldown fill + timer */}
       {onCD && unlocked && (
         <>
           <CooldownFill endTime={cooldownEnd} size={size} id={power.id} />
@@ -262,7 +253,6 @@ function PowerIcon({ power, keyLabel, size, count, bestStreak, onActivate, activ
         </>
       )}
 
-      {/* Unlock flash */}
       {unlocked && !onCD && !active && count === power.unlocksAt && (
         <div style={{
           position:"absolute", inset:0, borderRadius:10,
@@ -271,7 +261,6 @@ function PowerIcon({ power, keyLabel, size, count, bestStreak, onActivate, activ
         }}/>
       )}
 
-      {/* Custom tooltip — desktop only */}
       {showTooltip && !isMobile && (
         <div style={{
           position:"absolute", top:"calc(100% + 8px)", left:"50%",
@@ -301,6 +290,8 @@ function PowerIcon({ power, keyLabel, size, count, bestStreak, onActivate, activ
     </div>
   );
 }
+
+// ─── Achievement card ─────────────────────────────────────────────────────────
 
 function AchievementCard({ emoji, name, unlocked, unlockedLabel, lockedLabel, description }: {
   emoji: string; name: string; unlocked: boolean;
@@ -334,15 +325,14 @@ function AchievementCard({ emoji, name, unlocked, unlockedLabel, lockedLabel, de
 // ─── Achievements menu ────────────────────────────────────────────────────────
 
 function AchievementsMenu({ count, bestStreak, onClose }: { count: number | null; bestStreak: number | null; onClose: () => void }) {
+  const c = count ?? 0;
+  const bs = bestStreak ?? 0;
   return (
-    <div style={{
-      position:"fixed", inset:0, zIndex:9998,
-      display:"flex",
-    }}>
+    <div style={{ position:"fixed", inset:0, zIndex:9998, display:"flex" }}>
       <div onClick={onClose} style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.3)" }}/>
       <div style={{
         position:"relative", zIndex:1,
-        width: 280, height:"100%",
+        width: 290, height:"100%",
         background:"#fff",
         boxShadow:"4px 0 24px rgba(0,0,0,0.12)",
         display:"flex", flexDirection:"column",
@@ -351,45 +341,63 @@ function AchievementsMenu({ count, bestStreak, onClose }: { count: number | null
         animation:"slideInLeft 0.25s cubic-bezier(0.34,1.2,0.64,1) both",
       }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
-          <div style={{ fontFamily:"'Lilita One',cursive", fontSize:22, color:"#c94a6a" }}>
-            🏆 Logros
-          </div>
+          <div style={{ fontFamily:"'Lilita One',cursive", fontSize:22, color:"#c94a6a" }}>🏆 Logros</div>
           <button onClick={onClose} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", color:"#999" }}>✕</button>
         </div>
 
-        {/* Avalanche */}
         <AchievementCard
-          emoji={(count ?? 0) >= 1000 ? "🌊" : "🔒"}
+          emoji={c >= 1000 ? "🌊" : "🔒"}
           name="Avalancha"
-          unlocked={(count ?? 0) >= 1000}
+          unlocked={c >= 1000}
           unlockedLabel="✅ Desbloqueado"
-          lockedLabel={`🔒 Falta ${1000 - (count ?? 0)} puntos`}
-          description={<>Llegá a <strong>1.000 puntos</strong> para desbloquear el poder Avalancha.</>}
+          lockedLabel={`🔒 Falta ${(1000 - c).toLocaleString()} puntos`}
+          description={<>Llegá a <strong>1.000 puntos</strong> para desbloquear Avalancha — x3 targets por 15s.</>}
         />
 
-        {/* Puntería */}
         <AchievementCard
-          emoji={(count ?? 0) >= 2500 ? "🎯" : "🔒"}
+          emoji={c >= 2500 ? "🎯" : "🔒"}
           name="Puntería"
-          unlocked={(count ?? 0) >= 2500}
+          unlocked={c >= 2500}
           unlockedLabel="✅ Desbloqueado"
-          lockedLabel={`🔒 Falta ${2500 - (count ?? 0)} puntos`}
-          description={<>Llegá a <strong>2.500 puntos</strong> para desbloquear Puntería — hitbox mínima pero cada acierto vale x5.</>}
+          lockedLabel={`🔒 Falta ${(2500 - c).toLocaleString()} puntos`}
+          description={<>Llegá a <strong>2.500 puntos</strong> para desbloquear Puntería — hitbox mínima pero x5 por acierto, 30s.</>}
         />
 
-        {/* NoobTrainer */}
         <AchievementCard
-          emoji={(bestStreak ?? 0) >= 50 ? "🎯" : "🔒"}
-          name="NoobTrainer"
-          unlocked={(bestStreak ?? 0) >= 50}
+          emoji={c >= 5000 ? "💨" : "🔒"}
+          name="Viento"
+          unlocked={c >= 5000}
           unlockedLabel="✅ Desbloqueado"
-          lockedLabel={`🔒 Mejor racha: ${bestStreak ?? 0}/50`}
-          description={<>Conseguí una racha de <strong>50 objetivos</strong> sin que ninguno escape para desbloquear NoobTrainer.</>}
+          lockedLabel={`🔒 Falta ${(5000 - c).toLocaleString()} puntos`}
+          description={<>Llegá a <strong>5.000 puntos</strong> para desbloquear Viento — targets que se mecen x2 por 30s.</>}
         />
 
-        <div style={{ fontFamily:"'Nunito',sans-serif", fontSize:12, color:"#bbb", textAlign:"center", marginTop:8 }}>
-          Más logros próximamente...
-        </div>
+        <AchievementCard
+          emoji={c >= 10000 ? "🛡️" : "🔒"}
+          name="Escudo"
+          unlocked={c >= 10000}
+          unlockedLabel="✅ Desbloqueado"
+          lockedLabel={`🔒 Falta ${(10000 - c).toLocaleString()} puntos`}
+          description={<>Llegá a <strong>10.000 puntos</strong> para desbloquear Escudo — los targets necesitan 2 clicks para caer, 30s.</>}
+        />
+
+        <AchievementCard
+          emoji={c >= 20000 ? "✨" : "🔒"}
+          name="Toque de Oro"
+          unlocked={c >= 20000}
+          unlockedLabel="✅ Desbloqueado"
+          lockedLabel={`🔒 Falta ${(20000 - c).toLocaleString()} puntos`}
+          description={<>Llegá a <strong>20.000 puntos</strong> para desbloquear el Toque de Oro — ¡todo se vuelve dorado! x5 por 1 minuto.</>}
+        />
+
+        <AchievementCard
+          emoji={bs >= 50 ? "🧲" : "🔒"}
+          name="NoobTrainer"
+          unlocked={bs >= 50}
+          unlockedLabel="✅ Desbloqueado"
+          lockedLabel={`🔒 Mejor racha: ${bs}/50`}
+          description={<>Conseguí una racha de <strong>50 objetivos</strong> sin que ninguno escape para desbloquear NoobTrainer — hitbox ampliada.</>}
+        />
       </div>
     </div>
   );
@@ -416,23 +424,19 @@ export default function PowerBar({ count, bestStreak, onActivate, activeId, bloc
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Keyboard shortcuts — desktop only
   useEffect(() => {
     if (isMobile) return;
     const onKey = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       const key = e.key.toUpperCase();
       const powerId = KEY_TO_POWER[key];
       if (!powerId) return;
       const power = POWERS.find(p => p.id === powerId);
       if (!power) return;
-      // Same guards as PowerIcon handleClick
       const unlocked = isUnlocked(power, count, bestStreak);
       if (!unlocked) return;
       if (isOnCooldown(power.id)) return;
       if (activeId === power.id) return;
-      // Set cooldown and activate
       setCooldownEnd(power.id);
       onActivateRef.current(powerId);
     };
@@ -462,7 +466,6 @@ export default function PowerBar({ count, bestStreak, onActivate, activeId, bloc
 
       <PowerToast activeId={activeId} />
 
-      {/* Top-right power icons — 3 top, 2 bottom */}
       <div style={{
         position:"fixed", top:16, right:16,
         display:"grid",
@@ -486,7 +489,6 @@ export default function PowerBar({ count, bestStreak, onActivate, activeId, bloc
         ))}
       </div>
 
-      {/* Top-left: burger (mobile) or achievements button (desktop) */}
       <div style={{ position:"fixed", top:16, left:16, zIndex:500 }}>
         <button
           onClick={() => setMenuOpen(true)}
@@ -502,7 +504,6 @@ export default function PowerBar({ count, bestStreak, onActivate, activeId, bloc
         </button>
       </div>
 
-      {/* Achievements menu */}
       {menuOpen && (
         <AchievementsMenu count={count} bestStreak={bestStreak} onClose={() => setMenuOpen(false)} />
       )}

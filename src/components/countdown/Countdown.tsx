@@ -30,33 +30,57 @@ function getTimeLeft() {
   };
 }
 
+interface ActivePowers {
+  avalanche: boolean;
+  punteria:  boolean;
+  viento:    boolean;
+  escudo:    boolean;
+  dorado:    boolean;
+  gravity:   boolean;
+}
+const DEFAULT_POWERS: ActivePowers = {
+  avalanche: false, punteria: false, viento: false,
+  escudo: false, dorado: false, gravity: false,
+};
+
 export default function Countdown() {
   const [time, setTime] = useState<ReturnType<typeof getTimeLeft>>(null);
-  const { count, increment: handleScore } = useCounter();
+  const { count, increment: handleScoreRaw } = useCounter();
   const { current: streak, best: bestStreak, hit, miss } = useStreak();
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [multiplier, setMultiplier] = useState(1);
-  const [gravityActive, setGravityActive] = useState(false);
-  const [punteriaActive, setPunteriaActive] = useState(false);
+  const [active, setActive] = useState<ActivePowers>(DEFAULT_POWERS);
+  const [doradoFading, setDoradoFading] = useState(false);
+
+  // SmashCards already applies all per-hit multipliers (punteria, viento, escudo, dorado)
+  // internally — so we just pass handleScoreRaw directly.
+  const spawnMultiplier = active.avalanche ? 3 : 1;
+  const handleScore = (amount = 1) => handleScoreRaw(amount);
 
   const handleActivate = (id: string) => {
     const power = POWERS.find(p => p.id === id);
     if (!power) return;
-    // Puntería and NoobTrainer are mutually exclusive
-    if (id === "punteria" && gravityActive) return;
-    if (id === "gravity" && punteriaActive) return;
-    setActiveId(id);
-    if (id === "gravity") {
-      setGravityActive(true);
-      setTimeout(() => { setGravityActive(false); setActiveId(null); }, 15_000);
-    } else if (id === "punteria") {
-      setPunteriaActive(true);
-      setTimeout(() => { setPunteriaActive(false); setActiveId(null); }, 15_000);
-    } else {
-      setMultiplier(power.multiplier);
-      setTimeout(() => { setMultiplier(1); setActiveId(null); }, 15_000);
-    }
+    if (id === "punteria" && active.gravity) return;
+    if (id === "gravity" && active.punteria) return;
+    setActive(prev => ({ ...prev, [id]: true }));
+    const duration = power.duration;
+    setTimeout(() => {
+      if (id === "dorado") {
+        setDoradoFading(true);
+        setTimeout(() => { setDoradoFading(false); setActive(prev => ({ ...prev, dorado: false })); }, 1500);
+      } else {
+        setActive(prev => ({ ...prev, [id]: false }));
+      }
+    }, duration);
   };
+
+  const activeIdForBar: string | null =
+    active.dorado    ? "dorado"    :
+    active.escudo    ? "escudo"    :
+    active.viento    ? "viento"    :
+    active.punteria  ? "punteria"  :
+    active.avalanche ? "avalanche" :
+    active.gravity   ? "gravity"   : null;
+
+  const blockedId = active.gravity ? "punteria" : active.punteria ? "gravity" : null;
 
   useEffect(() => {
     document.title = "Faltan...";
@@ -108,11 +132,27 @@ export default function Countdown() {
 
       <CounterDisplay value={count} />
       <StreakDisplay current={streak} best={bestStreak} />
-      <PowerBar count={count} bestStreak={bestStreak} onActivate={handleActivate} activeId={activeId}
-        blockedId={gravityActive ? "punteria" : punteriaActive ? "gravity" : null} />
+      <PowerBar
+        count={count}
+        bestStreak={bestStreak}
+        onActivate={handleActivate}
+        activeId={activeIdForBar}
+        blockedId={blockedId}
+      />
       <Garland zIndex={50} top={0} />
       <Garland zIndex={50} top={44} />
-      <SmashCards onScore={handleScore} onHit={hit} onMiss={miss} multiplier={multiplier} gravityActive={gravityActive} punteriaActive={punteriaActive} />
+      <SmashCards
+        onScore={handleScore}
+        onHit={hit}
+        onMiss={miss}
+        multiplier={spawnMultiplier}
+        gravityActive={active.gravity}
+        punteriaActive={active.punteria}
+        vientoActive={active.viento}
+        escudoActive={active.escudo}
+        doradoActive={active.dorado}
+        doradoFading={doradoFading}
+      />
 
       <div className="countdown-root">
         <div className="title-drop" style={{

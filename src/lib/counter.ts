@@ -11,8 +11,8 @@ export async function fetchCount(): Promise<number> {
   return data?.value ?? 0;
 }
 
-export async function incrementCount(): Promise<number> {
-  const { data } = await supabase.rpc("increment_counter");
+export async function incrementCount(amount: number): Promise<number> {
+  const { data } = await supabase.rpc("increment_counter", { amount });
   return typeof data === "number" ? data : 0;
 }
 
@@ -41,11 +41,8 @@ export function useCounter() {
     flushingRef.current = true;
     const toFlush = pendingRef.current;
     pendingRef.current = 0;
-    let lastVal = 0;
-    for (let i = 0; i < toFlush; i++) {
-      lastVal = await incrementCount();
-    }
-    setCount(c => (c !== null && c > lastVal) ? c : lastVal);
+    const newVal = await incrementCount(toFlush);
+    setCount(c => (c !== null && c > newVal) ? c : newVal);
     flushingRef.current = false;
     if (pendingRef.current > 0) flushPending();
   }, []);

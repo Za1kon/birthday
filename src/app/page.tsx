@@ -1,10 +1,7 @@
-// Server Component — no "use client"
-// La fecha se verifica en el servidor. Celebration nunca llega al browser antes de tiempo.
-
 import Countdown from "@/components/countdown/Countdown";
 import Celebration from "@/components/celebration/Celebration";
 
-const BIRTHDAY = new Date("2026-03-18T00:00:00-03:00"); // UTC-3 Argentina
+const BIRTHDAY = new Date("2025-03-18T00:00:00-03:00"); // UTC-3 Argentina
 
 export default function Page() {
   const isBirthday = new Date() >= BIRTHDAY;

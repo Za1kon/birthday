@@ -1,9 +1,19 @@
 // ─── Powers / Milestones system ───────────────────────────────────────────────
 
-export const COOLDOWN_MS = 1 * 60 * 1000; // 1 minute (default)
+// export const COOLDOWN_MS = 1 * 60 * 1000; // 1 minute (default)
+export const COOLDOWN_MS = 30 * 1000; // DEBUG: 30s
 
+// export const COOLDOWN_MS_BY_ID: Record<string, number> = {
+//   punteria:  3 * 60 * 1000, // 3 minutes
+//   viento:    3 * 60 * 1000, // 3 minutes
+//   escudo:    3 * 60 * 1000, // 3 minutes
+//   dorado:    5 * 60 * 1000, // 5 minutes
+// };
 export const COOLDOWN_MS_BY_ID: Record<string, number> = {
-  punteria: 3 * 60 * 1000, // 3 minutes
+  punteria:  30 * 1000, // DEBUG: 30s
+  viento:    30 * 1000, // DEBUG: 30s
+  escudo:    30 * 1000, // DEBUG: 30s
+  dorado:    30 * 1000, // DEBUG: 30s
 };
 
 export interface Power {
@@ -11,8 +21,9 @@ export interface Power {
   name: string;
   emoji: string;
   description: string;
-  unlocksAt: number; // count milestone
-  multiplier: number; // spawn rate multiplier when active
+  unlocksAt: number;
+  multiplier: number;
+  duration: number;
 }
 
 export const POWERS: Power[] = [
@@ -23,25 +34,52 @@ export const POWERS: Power[] = [
     description: "Inunda la pantalla x3 durante 15 segundos",
     unlocksAt: 1000,
     multiplier: 3,
+    duration: 15_000,
   },
   {
     id: "punteria",
     name: "Puntería",
     emoji: "🎯",
-    description: "Hitbox reducida — cada acierto vale x5 durante 15s",
+    description: "Hitbox reducida — cada acierto vale x5 durante 30s",
     unlocksAt: 2500,
-    multiplier: 1,
+    multiplier: 5,
+    duration: 30_000,
   },
-  { id: "power3", name: "???", emoji: "🔒", description: "???", unlocksAt: 5000,  multiplier: 1 },
-  { id: "power4", name: "???", emoji: "🔒", description: "???", unlocksAt: 10000, multiplier: 1 },
-  { id: "power5", name: "???", emoji: "🔒", description: "???", unlocksAt: 20000, multiplier: 1 },
+  {
+    id: "viento",
+    name: "Viento",
+    emoji: "💨",
+    description: "Los targets se mecen x2 durante 30s — combina multiplicadores",
+    unlocksAt: 5000,
+    multiplier: 2,
+    duration: 30_000,
+  },
+  {
+    id: "escudo",
+    name: "Escudo",
+    emoji: "🛡️",
+    description: "Los targets necesitan 2 clicks — más difícil, combina multiplicadores, 30s",
+    unlocksAt: 10000,
+    multiplier: 1,
+    duration: 30_000,
+  },
+  {
+    id: "dorado",
+    name: "Toque de Oro",
+    emoji: "✨",
+    description: "¡Todo se vuelve dorado! x5 durante 1 minuto",
+    unlocksAt: 20000,
+    multiplier: 5,
+    duration: 60_000,
+  },
   {
     id: "gravity",
     name: "NoobTrainer",
     emoji: "🧲",
     description: "Hitbox ampliada por 15s",
-    unlocksAt: -1, // unlocked by streak, not points
+    unlocksAt: -1,
     multiplier: 1,
+    duration: 15_000,
   },
 ];
 

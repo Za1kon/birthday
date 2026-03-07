@@ -15,9 +15,6 @@ import Banners from "./Banners";
 import FallingLetters from "./FallingLetters";
 import MainCard from "./MainCard";
 
-const AVALANCHE_DURATION = 15_000;
-const GRAVITY_DURATION = 15_000;
-
 export default function Celebration() {
   const { count, increment } = useCounter();
   const { current: streak, best: bestStreak, hit, miss } = useStreak();
@@ -25,6 +22,9 @@ export default function Celebration() {
   const [multiplier, setMultiplier] = useState(1);
   const [gravityActive, setGravityActive] = useState(false);
   const [punteriaActive, setPunteriaActive] = useState(false);
+  const [vientoActive, setVientoActive] = useState(false);
+  const [escudoActive, setEscudoActive] = useState(false);
+  const [doradoActive, setDoradoActive] = useState(false);
 
   const handleActivate = (id: string) => {
     const power = POWERS.find(p => p.id === id);
@@ -32,15 +32,25 @@ export default function Celebration() {
     if (id === "punteria" && gravityActive) return;
     if (id === "gravity" && punteriaActive) return;
     setActiveId(id);
+    const dur = power.duration;
     if (id === "gravity") {
       setGravityActive(true);
-      setTimeout(() => { setGravityActive(false); setActiveId(null); }, GRAVITY_DURATION);
+      setTimeout(() => { setGravityActive(false); setActiveId(null); }, dur);
     } else if (id === "punteria") {
       setPunteriaActive(true);
-      setTimeout(() => { setPunteriaActive(false); setActiveId(null); }, GRAVITY_DURATION);
-    } else {
+      setTimeout(() => { setPunteriaActive(false); setActiveId(null); }, dur);
+    } else if (id === "viento") {
+      setVientoActive(true);
+      setTimeout(() => { setVientoActive(false); setActiveId(null); }, dur);
+    } else if (id === "escudo") {
+      setEscudoActive(true);
+      setTimeout(() => { setEscudoActive(false); setActiveId(null); }, dur);
+    } else if (id === "dorado") {
+      setDoradoActive(true);
+      setTimeout(() => { setDoradoActive(false); setActiveId(null); }, dur);
+    } else if (id === "avalanche") {
       setMultiplier(power.multiplier);
-      setTimeout(() => { setMultiplier(1); setActiveId(null); }, AVALANCHE_DURATION);
+      setTimeout(() => { setMultiplier(1); setActiveId(null); }, dur);
     }
   };
 
@@ -117,7 +127,7 @@ export default function Celebration() {
         blockedId={gravityActive ? "punteria" : punteriaActive ? "gravity" : null} />
       <div className="celebration-root">
         <Garland zIndex={30} />
-        <Balloons onPop={increment} onHit={hit} onMiss={miss} multiplier={multiplier} gravityActive={gravityActive} punteriaActive={punteriaActive} />
+        <Balloons onPop={increment} onHit={hit} onMiss={miss} multiplier={multiplier} gravityActive={gravityActive} punteriaActive={punteriaActive} vientoActive={vientoActive} escudoActive={escudoActive} doradoActive={doradoActive} />
         <Confetti />
         <FallingLetters />
         <Banners />

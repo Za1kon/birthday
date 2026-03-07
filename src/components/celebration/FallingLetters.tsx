@@ -5,12 +5,14 @@ import { useIsMobile } from "@/lib/hooks";
 import { playEnvelopeSound } from "@/lib/audio";
 
 const LETTER_TYPES = [
-  { id:"red",   envColor:"#E85D5D", envDark:"#B23A3A", paperBg:"#FFF1F1", accent:"#C44545", emoji:"💀", title:"Un Deseo",    message:"Que este año esté lleno de gore que te haga reír hasta que te duela la panza #ElGoreMeDaRisa (por no decir más) ¡Feliz cumple! 🩸" },
-  { id:"purple", envColor:"#D4AAFF", envDark:"#8e44c9", paperBg:"#F5F0FF", accent:"#7a2eb3", emoji:"🌟", title:"Una Oscuridad",   message:"Hay dos, dos que tienen sus propios problemas y los dos son como son, eso los juntó y así encajan perfecto 🌟" },
-  { id:"blue",   envColor:"#A8D8FF", envDark:"#2e7eaa", paperBg:"#F0F8FF", accent:"#2e7eaa", emoji:"⚔️", title:"Una Fantasía", message:'Prometo que este año vas a poder ganarme en algún juego. Pero a final de año seguro manca de mrd ahre 💀💀💀' },
-  { id:"green",  envColor:"#A8FFD4", envDark:"#2e8a55", paperBg:"#F0FFF8", accent:"#2e8a55", emoji:"🌿", title:"¿Te Gustó La Sorpresa?",  message:"Te la saco? Te la pongo? Te garcho? Me amas? Te la chupo? Te quiero? Te recontramega doy cariño? 🌿" },
-  { id:"yellow", envColor:"#FFE8A8", envDark:"#b37a00", paperBg:"#FFFBF0", accent:"#b37a00", emoji:"🌻", title:"Lista De Nombres",  message:"Larry Capija, Rosa Melano, Dolores Delano, Tomás Turbado, Elver Galarga, Benito Camelo, Agostina Se Arrima 🎀" },
-  { id:"pink",  envColor:"#F8BBD0", envDark:"#D81B60", paperBg:"#FFF0F6", accent:"#EC407A", emoji:"❤️", title:"TQM",     message:"Quiero mejorar con vos y crecer con vos, que seamos los mejores, aunque vos ya sos la mejor. Te quiero un monton ❤️" },
+  { id:"red",    envColor:"#E85D5D",  envDark:"#B23A3A", paperBg:"#FFF1F1", accent:"#C44545", emoji:"💀", title:"Un Deseo",                 message:"Que este año esté lleno de gore que te haga reír hasta que te duela la panza #ElGoreMeDaRisa (por no decir más) ¡Feliz cumple! 🩸" },
+  { id:"purple", envColor:"#D4AAFF",  envDark:"#8e44c9", paperBg:"#F5F0FF", accent:"#7a2eb3", emoji:"🌟", title:"Una Oscuridad",            message:"Hay dos, dos que tienen sus propios problemas y los dos son como son, eso los juntó y así encajan perfecto 🌟" },
+  { id:"blue",   envColor:"#A8D8FF",  envDark:"#2e7eaa", paperBg:"#F0F8FF", accent:"#2e7eaa", emoji:"⚔️", title:"Una Fantasía",             message:'Prometo que este año vas a poder ganarme en algún juego. Pero a final de año seguro manca de mrd ahre 💀💀💀' },
+  { id:"green",  envColor:"#A8FFD4",  envDark:"#2e8a55", paperBg:"#F0FFF8", accent:"#2e8a55", emoji:"🌿", title:"¿Te Gustó La Sorpresa?",   message:"Te la saco? Te la pongo? Te garcho? Me amas? Te la chupo? Te quiero? Te recontramega doy cariño? 🌿" },
+  { id:"yellow", envColor:"#FFE8A8",  envDark:"#b37a00", paperBg:"#FFFBF0", accent:"#b37a00", emoji:"🌻", title:"Lista De Nombres",         message:"Larry Capija, Rosa Melano, Dolores Delano, Tomás Turbado, Elver Galarga, Benito Camelo, Agostina Se Arrima 🎀" },
+  { id:"pink",   envColor:"#F8BBD0",  envDark:"#D81B60", paperBg:"#FFF0F6", accent:"#EC407A", emoji:"❤️", title:"TQM",                      message:"Quiero mejorar con vos y crecer con vos, que seamos los mejores, aunque vos ya sos la mejor. Te quiero un monton ❤️" },
+  { id:"night",  envColor:"#3A3A52",  envDark:"#1a1a2e", paperBg:"#F0EFF8", accent:"#9B8EC4", emoji:"🌑", title:"Un Miedo",                 message:"Mucha gente me abandonó y me da miedo que lo hagas en algún momento otra vez, perdón por ser tan intenso a veces 🌑" },
+  { id:"mint",   envColor:"#B2F5EA",  envDark:"#2C7A7B", paperBg:"#F0FFFE", accent:"#2C7A7B", emoji:"💋", title:"Un Besito",                message:"En esta carta hay un cupon de un beso para que uses algún día, espero que lo uses bien 🎟️" },
 ];
 type LetterType = typeof LETTER_TYPES[0];
 interface LetterCard { uid:number; typeIndex:number; x:number; }

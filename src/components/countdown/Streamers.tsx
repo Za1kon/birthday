@@ -1,6 +1,5 @@
 "use client";
 
-// Streamers rendered on canvas — replaces 10 animated fixed divs
 import { useEffect, useRef } from "react";
 import { PALETTE } from "@/lib/colors";
 
@@ -27,7 +26,6 @@ export default function Streamers() {
     resize();
     window.addEventListener("resize", resize);
 
-    // 5 left + 5 right — same visual as before
     const streamers: Streamer[] = [
       ...[0,1,2,3,4].map(i => ({
         x: (4 + i*3) / 100 * window.innerWidth,
@@ -51,7 +49,6 @@ export default function Streamers() {
       })),
     ];
 
-    // Floating dots (replaces 16 animated DOM nodes)
     interface Dot { x:number; y:number; r:number; color:string; speed:number; }
     const dots: Dot[] = Array.from({length:16}, (_,i) => ({
       x: ((i*7)%100) / 100 * window.innerWidth,

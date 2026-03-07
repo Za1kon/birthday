@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 
 export default function StreakDisplay({ current, best }: { current: number; best: number | null }) {
-  // Local best that updates instantly (same pattern as CounterDisplay)
   const [localBest, setLocalBest] = useState(best);
   const prevBestRef = useRef(best);
 
@@ -14,7 +13,6 @@ export default function StreakDisplay({ current, best }: { current: number; best
     }
   }, [best]);
 
-  // Also update local best immediately when current streak exceeds it
   useEffect(() => {
     if (localBest === null || current > localBest) setLocalBest(current);
   }, [current, localBest]);
@@ -37,7 +35,7 @@ export default function StreakDisplay({ current, best }: { current: number; best
           lineHeight: 1,
           textShadow: "0 1px 6px rgba(122,46,179,0.15)",
         }}>
-          ¡Que no se caigan! {current} 🔥
+          ¡Que no escapen! {current} 🔥
         </div>
       )}
       {localBest !== null && (
